@@ -1,0 +1,9 @@
+To login to docker Postgres Table
+
+1. docker exec -it mypostgres psql -U postgres
+2. psql -h localhost -U postgres
+
+
+To run fastAPI back end
+
+1. uvicorn main:app --reload (Hosts on: http://127.0.0.1:8000/)

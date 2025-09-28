@@ -1,0 +1,24 @@
+# ========================================
+# Backend - Python / FastAPI
+# ========================================
+back-end/venv/                  # Virtual environment
+back-end/__pycache__/           # Python cache
+back-end/*.pyc                  # Compiled Python files
+back-end/.env                   # Environment variables
+
+# ========================================
+# Frontend - Next.js / Node
+# ========================================
+front-end/node_modules/         # Node.js dependencies
+front-end/.next/                # Next.js build output
+front-end/out/                  # Next.js static export output
+front-end/.env.local            # Local environment variables
+front-end/.env.development.local
+front-end/.env.production.local
+
+# ========================================
+# General
+# ========================================
+*.log                          # Log files
+.DS_Store                      # macOS system files
+
