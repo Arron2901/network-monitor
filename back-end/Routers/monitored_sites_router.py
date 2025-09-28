@@ -12,9 +12,11 @@ class MonitoredSitesBase(BaseModel):
     Attributes:
         id (int): Unique identifier for the monitored site.
         site_url (str): The URL of the monitored site.
+        site_name (str): The name of the monitored site.
     """
     id: int
     site_url: str
+    site_name: str
 
 
 class MonitoredSitesCreate(BaseModel):
@@ -22,17 +24,21 @@ class MonitoredSitesCreate(BaseModel):
 
     Attributes:
         site_url (str): The URL of the monitored site to create.
-    """
-    site_url: str 
-
-
-class MonitoredSitesUpdateSiteURL(BaseModel):
-    """Schema for updating a monitored site's URL.
-
-    Attributes:
-        site_url (str): The new URL of the monitored site.
+        site_name (str): The name of the monitored site to create.
     """
     site_url: str
+    site_name: str
+
+
+class MonitoredSitesUpdate(BaseModel):
+    """Schema for updating a monitored site.
+
+    Attributes:
+        site_url (Optional[str]): The new URL of the monitored site.
+        site_name (Optional[str]): The new name of the monitored site.
+    """
+    site_url: Optional[str] = None
+    site_name: Optional[str] = None
 
 
 def get_db():
@@ -69,7 +75,7 @@ async def create_monitored_site(site: MonitoredSitesCreate, db: db_dependency):
     Raises:
         HTTPException: If a database error occurs during commit.
     """
-    db_site = models.MonitoredSites(site_url=site.site_url)
+    db_site = models.MonitoredSites(site_url=site.site_url, site_name=site.site_name)
     db.add(db_site)
     db.commit()
     db.refresh(db_site)
@@ -86,9 +92,8 @@ async def fetch_sites(db: db_dependency, site_id: Optional[int] = Query(default=
             If not provided, all monitored sites are returned. Defaults to None.
 
     Returns:
-        Union[List[MonitoredSitesBase], MonitoredSitesBase]:
-            - A list of monitored sites if no site_id is provided.
-            - A single monitored site if site_id is provided.
+        List[MonitoredSitesBase]: A list of monitored sites if no site_id is provided.
+        MonitoredSitesBase: A single monitored site if site_id is provided.
 
     Raises:
         HTTPException: If a monitored site with the given ID is not found (404).
@@ -97,8 +102,59 @@ async def fetch_sites(db: db_dependency, site_id: Optional[int] = Query(default=
         return db.query(models.MonitoredSites).all()
 
     result = db.query(models.MonitoredSites).filter(models.MonitoredSites.id == site_id).first()
-
     if not result:
         raise HTTPException(status_code=404, detail="Unable to find specified site")
     
     return result
+
+
+@router.patch("/update", response_model=MonitoredSitesBase)
+async def update_site(db: db_dependency, site_id: int, site_update: MonitoredSitesUpdate):
+    """Update a monitored site.
+
+    Args:
+        db (Session): The database session dependency.
+        site_id (int): ID of the site to update.
+        site_update (MonitoredSitesUpdate): Fields to update.
+
+    Returns:
+        MonitoredSitesBase: The updated monitored site.
+
+    Raises:
+        HTTPException: If a monitored site with the given ID is not found (404).
+    """
+    site = db.query(models.MonitoredSites).filter(models.MonitoredSites.id == site_id).first()
+    if not site:
+        raise HTTPException(status_code=404, detail="Unable to find specified site")
+    
+    update_data = site_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(site, key, value)
+    
+    db.commit()
+    db.refresh(site)
+    return site
+
+
+@router.delete("/delete")
+async def delete_site(site_id: int, db: db_dependency):
+    """Delete a monitored site by ID.
+
+    Args:
+        site_id (int): ID of the site to delete.
+        db (Session): The database session dependency.
+
+    Returns:
+        str: Success message.
+
+    Raises:
+        HTTPException: If a monitored site with the given ID is not found (404).
+    """
+    site = db.query(models.MonitoredSites).filter(models.MonitoredSites.id == site_id).first()
+    if not site:
+        raise HTTPException(status_code=404, detail="Unable to find specified site")
+
+    db.delete(site)
+    db.commit()
+
+    return "Successfully deleted site"

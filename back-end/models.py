@@ -6,6 +6,7 @@ class MonitoredSites(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     site_url = Column(String, index=True)
+    site_name = Column(String, index=True)
 
 class SiteCheckIntervals(Base):
     __tablename__ = "site_check_intervals"
