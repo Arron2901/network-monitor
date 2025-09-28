@@ -101,7 +101,7 @@ async def fetch_sites(db: db_dependency, site_id: Optional[int] = Query(default=
     if site_id is None:
         return db.query(models.MonitoredSites).all()
 
-    result = db.query(models.MonitoredSites).filter(models.MonitoredSites.id == site_id).first()
+    result = db.query(models.MonitoredSites).filter(models.MonitoredSites.id == site_id).all()
     if not result:
         raise HTTPException(status_code=404, detail="Unable to find specified site")
     
