@@ -2,6 +2,8 @@ To login to docker Postgres Table
 
 1. docker exec -it mypostgres psql -U postgres
 2. psql -h localhost -U postgres
+3. \l
+4. \c networkmonitor
 
 
 To run fastAPI back end
