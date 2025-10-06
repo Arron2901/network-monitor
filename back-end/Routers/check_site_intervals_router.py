@@ -4,6 +4,7 @@ from typing import List, Annotated, Optional
 import models
 from database import SessionLocal
 from sqlalchemy.orm import Session
+from celery_app import check_site
 
 
 class SiteCheckIntervalsBase(BaseModel):
@@ -82,6 +83,8 @@ async def create_site_check_interval(interval: SiteCheckIntervalsCreate, db: db_
     db.add(db_interval)
     db.commit()
     db.refresh(db_interval)
+    check_site.apply_async((db_interval.site_url_id,), countdown=db_interval.time_interval)
+
     return db_interval
 
 

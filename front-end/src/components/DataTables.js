@@ -3,16 +3,10 @@
 import { useEffect, useState } from "react";
 import { fetchAllData } from "@/app/api/fetchData";
 
-export default function DataTable() {
-    const [data, setData] = useState([])
-
-    useEffect(() => {
-        async function load() {
-            const fetchedData = await fetchAllData(); // await is required
-            setData(fetchedData);
-        }
-        load();
-        }, []);
+export default function DataTable({ data, handleDelete }) {
+    if (!data || data.length === 0) {
+      return <p>No Sites are being monitored yet!</p>
+    }
 
 
     return (
@@ -24,8 +18,9 @@ export default function DataTable() {
             <th className="border px-4 py-2 text-left">ID</th>
             <th className="border px-4 py-2 text-left">Name</th>
             <th className="border px-4 py-2 text-left">URL</th>
-            <th className="border px-4 py-2 text-left">Interval(s)</th>
-            <th className="border px-4 py-2 text-left">Status(es)</th>
+            <th className="border px-4 py-2 text-left">Interval</th>
+            <th className="border px-4 py-2 text-left">Status</th>
+            <th className="border px-4 py-2 text-left">Delete</th>
           </tr>
         </thead>
         <tbody>
@@ -44,6 +39,7 @@ export default function DataTable() {
                   ? site.statuses.map((s) => (s.status ? "✅ Up" : "❌ Down")).join(", ")
                   : "—"}
               </td>
+              <td className="border px-4 py-2"><button onClick={ () => handleDelete(site.id) } className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Delete</button></td>
             </tr>
           ))}
         </tbody>

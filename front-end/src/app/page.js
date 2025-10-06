@@ -1,15 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DataTable from "@/components/DataTables";
+import { fetchAllData } from "@/app/api/fetchData";
+import { deleteData } from "@/app/api/deleteData";
+
 
 export default function Home() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [sites, setSites] = useState([])
   const [formData, setFormData] = useState({
     apiName: "",
     apiUrl: "",
     interval: "",
   });
+
+  const loadSites = async() => {
+    const data = await fetchAllData()
+    if (data) setSites(data)
+  }
+
+  const handleDelete = async(site_id) => {
+    const success = await deleteData(site_id)
+    if (success) {
+      setSites((prevSites) => prevSites.filter((site) => site.id !== site_id));
+    }
+  }
+
+  useEffect(() => {
+    loadSites()
+  }, [])
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -48,13 +67,18 @@ export default function Home() {
         body: JSON.stringify({ site_url_id: siteId, status: isUp }),
       });
 
-      window.location.reload()
+      await loadSites()
+
+      setFormData({
+        apiName: "",
+        apiUrl: "",
+        interval: ""
+      })
 
     } catch (error) {
       console.error("Error creating data: ", error)
     }
     
-    setIsOpen(false); // close modal after submit
   };
 
   return (
@@ -66,30 +90,7 @@ export default function Home() {
 
         <h1 className="text-xl font-semibold">Network API Monitor</h1>
 
-        {/* Open Modal Button */}
-        <button
-          onClick={() => setIsOpen(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          Add API
-        </button>
-      </div>
-
-      {/* Card for a table showing all of the monitored API's */}
-      <div className="flex flex-col items-center gap-4 show-api-card">
-
-        <h1 className="text-xl font-semibold pt-10">All API's</h1>
-
-        <DataTable />
-      </div>
-
-      {/* Modal */}
-      {isOpen && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center" >
-          <div className="bg-white rounded-xl shadow-lg p-6 w-96">
-            <h2 className="text-xl font-semibold mb-4">Add API</h2>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
               {/* API Name */}
               <div>
                 <label className="block text-sm font-medium">API Name</label>
@@ -133,25 +134,20 @@ export default function Home() {
               </div>
 
               {/* Buttons */}
-              <div className="flex justify-end gap-2 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  className="px-4 py-2 rounded-lg border"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Save
-                </button>
+              <div className="flex gap-2 pt-4">
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Add API</button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+      </div>
+
+      {/* Card for a table showing all of the monitored API's */}
+      <div className="flex flex-col items-center gap-4 show-api-card">
+
+        <h1 className="text-xl font-semibold pt-10">All API's</h1>
+
+        <DataTable data = { sites } handleDelete={ handleDelete }/>
+      </div>
+
     </div>
   );
 }
